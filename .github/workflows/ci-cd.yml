@@ -39,5 +39,4 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/AiPro-Python
-            pkill -f "uvicorn main:app" 
             nohup uvicorn main:app --host 0.0.0.0 --port 5000 --reload > app.log 2>&1 &
