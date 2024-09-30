@@ -1,7 +1,7 @@
 name: CI CD
 on:
   push:
-    branches: ['new-branch']
+    branches: ['main']
 env:
   EC2_USERNAME: ubuntu
   AWS_REGION: ap-northeast-2
@@ -28,6 +28,9 @@ jobs:
           script: |
             sudo apt-get update
             sudo apt-get install -y python3-venv
+            sudo mkdir -p /home/AiPro-Python
+            sudo chown -R ${{ env.EC2_USERNAME }}:${{ env.EC2_USERNAME }} /home/AiPro-Python
+            sudo chmod 755 /home/AiPro-Python
 
       - name: Deploy Python file to EC2
         env:
@@ -50,5 +53,5 @@ jobs:
             source venv/bin/activate
             pip install fastapi uvicorn langchain_openai pydantic python-dotenv
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
-            pkill -f "uvicorn main:app"
+            pkill -f "uvicorn main:app"  # Kill any existing uvicorn process
             nohup uvicorn main:app --host 0.0.0.0 --port 5000 > app.log 2>&1 &
