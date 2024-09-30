@@ -1,7 +1,7 @@
 name: CI CD
 on:
   push:
-    branches: ['main']
+    branches: ['new-branch']
 env:
   EC2_USERNAME: ubuntu
   AWS_REGION: ap-northeast-2
@@ -53,5 +53,5 @@ jobs:
             source venv/bin/activate
             pip install fastapi uvicorn langchain_openai pydantic python-dotenv
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
-            pkill -f "uvicorn main:app"  # Kill any existing uvicorn process
+            pkill -f "uvicorn main:app"
             nohup uvicorn main:app --host 0.0.0.0 --port 5000 > app.log 2>&1 &
