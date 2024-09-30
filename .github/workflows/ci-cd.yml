@@ -1,10 +1,13 @@
 name: CI CD
+
 on:
   push:
     branches: ['new-branch']
+
 env:
   EC2_USERNAME: ubuntu
   AWS_REGION: ap-northeast-2
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,19 +22,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
-      - name: Prepare EC2 environment
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_PUBLIC_IP }}
-          username: ${{ env.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo apt-get update
-            sudo apt-get install -y python3-venv
-            sudo mkdir -p /home/AiPro-Python
-            sudo chown -R ${{ env.EC2_USERNAME }}:${{ env.EC2_USERNAME }} /home/AiPro-Python
-            sudo chmod 755 /home/AiPro-Python
-
       - name: Deploy Python file to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_PUBLIC_IP }}
@@ -41,7 +31,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i private_key main.py ${EC2_USERNAME}@${EC2_HOST}:/home/AiPro-Python/main.py
           rm -f private_key
 
-      - name: Setup Virtual Environment and Run Application
+      - name: Setup Environment and Run Application
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -49,9 +39,5 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/AiPro-Python
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install fastapi uvicorn langchain_openai pydantic python-dotenv
-            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
-            pkill -f "uvicorn main:app"
-            nohup uvicorn main:app --host 0.0.0.0 --port 5000 > app.log 2>&1 &
+            pkill -f "uvicorn main:app" 
+            nohup uvicorn main:app --host 0.0.0.0 --port 5000 --reload > app.log 2>&1 &
