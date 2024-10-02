@@ -27,6 +27,7 @@ class RuleEntry(BaseModel):
 
 class Query(BaseModel):
     userId: str
+    role: str
     question: str
     chatHistory: List[str]
 
@@ -36,53 +37,26 @@ load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 
-def create_prompt(conversation: List[str], new_question: str) -> dict:
+def create_prompt(conversation: List[str], new_question: str, role: str) -> dict:
     system_message = f"""
-    1. 사용자가 "CodeSnippet"을 입력했다면, 해당 코드**Optimization** 제시 및 **Error Debuging**
+    0. You are a very smart **programming instructor**. **Speak like a pro and ensure that you adhere to all coding rules and standards without making mistakes**.
+    1. 사용자가 "CodeSnippet"를 입력했다면, 해당 코드**Optimization** 제시 및 **Error Debuging**
     2. "CodeSnippet"의 *Syntax*를 확인하여 사용한 **Program Language** 명시
     3. You should give **Version** information you use when prints Prompt
-    4. If Error information is not in user_input then request which error user have faced when you feel vague from "CodeSnippet" or user_input
-    5. If user not give "CodeSnippet", you just make full code for user request
-    6. IF user give "CodeSnippet", you need to ask whether you should give full codes or give partial codes which you have modified by asking "네/아니오"
-    7. If user not give "CodeSnippet" and **No mention** about **Program Language**, you have to ask **which type of program language user want to use**
-    8. Lets Think Step by Step
+    4. If user not give "CodeSnippet", you just make full code for user request
+    5. Lets Think Step by Step
+    6. **Speak Koean**
+    7. **Make sure to find and give feedback on simple grammatical mistakes like missing braces or wrong Code Convention.**
+    8. The following is what the user is saying, "follow it absolutely": {role}
     """
 
     previous_log = "\n".join(conversation)
 
-    # new_question에서 "CodeSnippet"이 있는지 검사
-    if "CodeSnippet" in new_question:
-        code = new_question  # new_question을 코드 스니펫으로 가정
-        return {
-            "system_message": system_message,
-            "new_question": new_question,
-            "previous_log": previous_log,
-            "response": f"""
-                *프롬프트 생성기*
-
-                문제 설명:
-                {new_question}
-
-                코드:
-                {code}
-
-                버전 정보:
-                - *프로그래밍 언어*: [언어 버전 명시]
-                - *라이브러리/패키지*: [라이브러리 및 패키지 정보]
-
-            """,
-        }
-
-    # "CodeSnippet"이 없을 경우, 프로그래밍 언어를 물어봄
-    else:
-        return {
-            "system_message": system_message,
-            "new_question": new_question,
-            "previous_log": previous_log,
-            "response": """
-                프로그래밍 언어: 사용을 원하시는 언어를 기입해서 사용해주세요.
-            """,
-        }
+    return {
+        "system_message": system_message,
+        "new_question": new_question,
+        "previous_log": previous_log,
+    }
 
 
 def generate_prompt(prompt_dict: dict) -> str:
@@ -95,8 +69,6 @@ def generate_prompt(prompt_dict: dict) -> str:
     Previous Log:
     {prompt_dict['previous_log']}
 
-    Assistant Response:
-    {prompt_dict['response']}
     """
     return prompt_template
 
@@ -112,7 +84,7 @@ async def query_api(query: Query):
         user_conversation.append(f"user: {query.question}")
 
         # 프롬프트 생성
-        prompt_dict = create_prompt(user_conversation, query.question)
+        prompt_dict = create_prompt(user_conversation, query.question, query.role)
 
         # PromptTemplate을 이용해 실제 프롬프트 문자열 생성
         prompt_template = generate_prompt(prompt_dict)
