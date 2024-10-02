@@ -1,0 +1,46 @@
+name: CI CD
+
+on:
+  workflow_run:
+    workflows: ["SonarCloud"]
+    types:
+      - completed
+
+
+env:
+  EC2_USERNAME: ubuntu
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/new-branch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: AWS Authentication
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+
+      - name: Deploy Python file to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_PUBLIC_IP }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          echo "$EC2_SSH_KEY" > private_key && chmod 600 private_key
+          scp -o StrictHostKeyChecking=no -i private_key main.py ${EC2_USERNAME}@${EC2_HOST}:/home/AiPro-Python/main.py
+          rm -f private_key
+
+      - name: Setup Environment and Run Application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/AiPro-Python
+            nohup uvicorn main:app --host 0.0.0.0 --port 5000 --reload > app.log 2>&1 &
