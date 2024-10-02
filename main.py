@@ -19,19 +19,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # 데이터 모델 정의
 class RuleEntry(BaseModel):
     rules: str
+
 
 class Query(BaseModel):
     userId: str
     question: str
     chatHistory: List[str]
 
+
 # 환경 변수 또는 직접 설정으로부터 OpenAI API 키 가져오기
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
-
 
 
 def create_prompt(conversation: List[str], new_question: str) -> dict:
@@ -41,7 +43,7 @@ def create_prompt(conversation: List[str], new_question: str) -> dict:
     3. You should give **Version** information you use when prints Prompt
     4. If Error information is not in user_input then request which error user have faced when you feel vague from "CodeSnippet" or user_input
     5. If user not give "CodeSnippet", you just make full code for user request
-    6. IF user give "CodeSnippet", you need to ask whether you should give full codes or give partial codes which you have modified by asking "Yes/No"
+    6. IF user give "CodeSnippet", you need to ask whether you should give full codes or give partial codes which you have modified by asking "네/아니오"
     7. If user not give "CodeSnippet" and **No mention** about **Program Language**, you have to ask **which type of program language user want to use**
     8. Lets Think Step by Step
     """
@@ -68,7 +70,7 @@ def create_prompt(conversation: List[str], new_question: str) -> dict:
                 - *프로그래밍 언어*: [언어 버전 명시]
                 - *라이브러리/패키지*: [라이브러리 및 패키지 정보]
 
-            """
+            """,
         }
 
     # "CodeSnippet"이 없을 경우, 프로그래밍 언어를 물어봄
@@ -79,8 +81,9 @@ def create_prompt(conversation: List[str], new_question: str) -> dict:
             "previous_log": previous_log,
             "response": """
                 프로그래밍 언어: 사용을 원하시는 언어를 기입해서 사용해주세요.
-            """
+            """,
         }
+
 
 def generate_prompt(prompt_dict: dict) -> str:
     prompt_template = f"""
@@ -96,6 +99,7 @@ def generate_prompt(prompt_dict: dict) -> str:
     {prompt_dict['response']}
     """
     return prompt_template
+
 
 # 챗봇 쿼리를 처리하는 엔드포인트
 @app.post("/query")
@@ -126,9 +130,11 @@ async def query_api(query: Query):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 @app.get("/")
 def read_root():
     return {"test": "test"}
+
 
 # 서버 실행: uvicorn main:app --reload
