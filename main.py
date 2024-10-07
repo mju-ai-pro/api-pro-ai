@@ -82,7 +82,7 @@ async def query_api(query: Query):
 
         # 프롬프트 생성
         prompt_dict = create_prompt(user_conversation, query.question, query.role)
-        print("prompt")
+
         # PromptTemplate을 이용해 실제 프롬프트 문자열 생성
         prompt = generate_prompt(prompt_dict)
 
