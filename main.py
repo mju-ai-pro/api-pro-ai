@@ -60,7 +60,7 @@ def create_prompt(conversation: List[str], new_question: str, role: str) -> dict
 
 
 def generate_prompt(prompt_dict: dict) -> str:
-    prompt_template = f"""
+    prompt = f"""
     {prompt_dict['system_message']}
 
     User Query:
@@ -70,7 +70,7 @@ def generate_prompt(prompt_dict: dict) -> str:
     {prompt_dict['previous_log']}
 
     """
-    return prompt_template
+    return prompt
 
 
 # 챗봇 쿼리를 처리하는 엔드포인트
@@ -80,15 +80,11 @@ async def query_api(query: Query):
         # 사용자로부터 받은 채팅 내역 사용
         user_conversation = query.chatHistory
 
-        # 새로운 질문을 대화 기록에 추가
-        user_conversation.append(f"user: {query.question}")
-
         # 프롬프트 생성
         prompt_dict = create_prompt(user_conversation, query.question, query.role)
-
+        print("prompt")
         # PromptTemplate을 이용해 실제 프롬프트 문자열 생성
-        prompt_template = generate_prompt(prompt_dict)
-        prompt = prompt_template.format(**prompt_dict)
+        prompt = generate_prompt(prompt_dict)
 
         # GPT 모델 초기화
         gpt_model = ChatOpenAI(model="gpt-4o-mini", openai_api_key=openai_api_key)
@@ -96,8 +92,6 @@ async def query_api(query: Query):
         # 모델에 프롬프트 전달
         response = gpt_model.invoke([HumanMessage(content=prompt)])
 
-        # 모델의 응답을 대화 기록에 추가
-        user_conversation.append(f"assistant: {response.content}")
         return {"message": response.content}
 
     except Exception as e:
