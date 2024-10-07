@@ -100,7 +100,7 @@ async def query_api(query: Query):
 
 @app.get("/")
 def read_root():
-    return {"test": "test"}
+    return {"test": "test2"}
 
 
 # 서버 실행: uvicorn main:app --reload
