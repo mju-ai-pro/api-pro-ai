@@ -3,7 +3,7 @@ name: CI CD
 on:
   push:
     branches:
-      - main
+      - new-branch
 
 env:
   EC2_USERNAME: ubuntu
