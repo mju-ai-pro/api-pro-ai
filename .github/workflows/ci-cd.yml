@@ -39,9 +39,22 @@ jobs:
           else
             echo "Quality Gate 통과 실패"
             MESSAGE="❗ SonarCloud 품질 게이트 통과 실패: ${{ github.repository }} (${{ github.ref }})"
-            MESSAGE="$MESSAGE\n자세한 내용: https://sonarcloud.io/dashboard?id=mju-ai-pro_ai-pro-ai"
+            DETAILS="자세한 내용: https://sonarcloud.io/dashboard?id=mju-ai-pro_ai-pro-ai"
             
-            curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"$MESSAGE\"}" $DISCORD_WEBHOOK
+            DATA='{
+              "embeds": [
+                {
+                  "title": "SonarCloud 품질 게이트 통과 실패",
+                  "description": "'"${MESSAGE}"'\n\n'"${DETAILS}"'",
+                  "color": 16711680,
+                  "footer": {
+                    "text": "알림"
+                  }
+                }
+              ]
+            }'
+
+            curl -X POST -H 'Content-type:application/json' -d "$DATA" ${{ secrets.DISCORD_WEBHOOK_URL }}
             
             exit 1
           fi
@@ -63,6 +76,7 @@ jobs:
           rm -f private_key
 
       - name: Setup Environment and Run Application
+        id: deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -71,3 +85,24 @@ jobs:
           script: |
             cd /home/AiPro-Python
             nohup uvicorn main:app --host 0.0.0.0 --port 5000 --reload > app.log 2>&1 &
+
+      - name: Send Deployment Success Notification
+        if: steps.deploy.outcome == 'success'
+        run: |
+          MESSAGE="✅ 애플리케이션이 성공적으로 배포되었습니다! : ${GITHUB_REPOSITORY} (${GITHUB_REF})"
+          DETAILS="해당 서버에서 실행 중입니다: https://hongkikii.site:444"
+          
+          DATA='{
+            "embeds": [
+              {
+                "title": "배포 성공",
+                "description": "'"${MESSAGE}"'\n\n'"${DETAILS}"'",
+                "color": 65280,
+                "footer": {
+                  "text": "알림"
+                }
+              }
+            ]
+          }'
+      
+          curl -X POST -H 'Content-type:application/json' -d "$DATA" ${{ secrets.DISCORD_WEBHOOK_URL }}
