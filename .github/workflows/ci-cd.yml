@@ -10,12 +10,19 @@ env:
   AWS_REGION: ap-northeast-2
 
 jobs:
-  deploy:
+  ci-cd:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
       - name: AWS Authentication
         uses: aws-actions/configure-aws-credentials@v2
         with:
