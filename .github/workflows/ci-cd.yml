@@ -24,10 +24,27 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Check SonarCloud Quality Gate
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          sleep 20
+          RESULT=$(curl -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT_KEY}")
+          STATUS=$(echo $RESULT | jq -r '.projectStatus.status')
+          echo "Quality Gate Status: $STATUS"
+          
+          if [ "$STATUS" = "OK" ]; then
+            echo "Quality Gate 통과"
+          else
+            echo "Quality Gate 통과 실패"
+            MESSAGE="❗ SonarCloud 품질 게이트 통과 실패: ${{ github.repository }} (${{ github.ref }})"
+            MESSAGE="$MESSAGE\n자세한 내용: https://sonarcloud.io/dashboard?id=mju-ai-pro_ai-pro-ai"
+            
+            curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"$MESSAGE\"}" $DISCORD_WEBHOOK
+            
+            exit 1
+          fi
           
       - name: AWS Authentication
         uses: aws-actions/configure-aws-credentials@v2
