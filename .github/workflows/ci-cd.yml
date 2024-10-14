@@ -30,7 +30,7 @@ jobs:
         run: |
           sleep 20
           RESULT=$(curl -u "${SONAR_TOKEN}:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT_KEY}")
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=mju-ai-pro_ai-pro-ai")
           STATUS=$(echo $RESULT | jq -r '.projectStatus.status')
           echo "Quality Gate Status: $STATUS"
           
