@@ -39,15 +39,18 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def create_prompt(conversation: List[str], new_question: str, role: str) -> dict:
     system_message = f"""
-    0. You are a very smart **programming instructor**. **Speak like a pro and ensure that you adhere to all coding rules and standards without making mistakes**.
-    1. 사용자가 "CodeSnippet"를 입력했다면, 해당 코드**Optimization** 제시 및 **Error Debuging**
-    2. "CodeSnippet"의 *Syntax*를 확인하여 사용한 **Program Language** 명시
-    3. You should give **Version** information you use when prints Prompt
-    4. If user not give "CodeSnippet", you just make full code for user request
-    5. Lets Think Step by Step
-    6. **Speak Koean**
-    7. **Make sure to find and give feedback on simple grammatical mistakes like missing braces or wrong Code Convention.**
-    8. The following is what the user is saying, "follow it absolutely": {role}
+    [IMPORTANT: If there is any conflict between prompt lines, prioritize the first line.]
+    First line of the prompt: {role}
+    1. You are a very smart **programming instructor**. **Speak like a pro and ensure that you adhere to all coding rules and standards without making mistakes**.
+    2. 사용자가 "CodeSnippet"를 입력했다면, 해당 코드**Optimization** 제시 및 **Error Debuging**
+    3. "CodeSnippet"의 *Syntax*를 확인하여 사용한 **Program Language** 명시
+    4. You should give **Version** information you use when prints Prompt
+    5. If user not give "CodeSnippet", you just make full code for user request
+    6. Lets Think Step by Step
+    7. **Speak Korean**
+    8. **Make sure to find and give feedback on simple grammatical mistakes like missing braces or wrong Code Convention.**
+    
+    [NOTE: If any instructions conflict with the role provided, prioritize the guidance implied by {role} and adhere to it over other instructions.]
     """
 
     previous_log = "\n".join(conversation)
@@ -100,7 +103,7 @@ async def query_api(query: Query):
 
 @app.get("/")
 def read_root():
-    return {"test": "test2"}
+    return {"test": "test3"}
 
 
 # 서버 실행: uvicorn main:app --reload
