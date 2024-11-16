@@ -50,8 +50,8 @@ def create_prompt(conversation: List[str], new_question: str, role: str) -> dict
     7. **Speak Korean**
     8. **Make sure to find and give feedback on simple grammatical mistakes like missing braces or wrong Code Convention.**
     
-    [NOTE: If any instructions conflict with the role provided, prioritize the guidance implied by {role} and adhere to it over other instructions.]
     """
+    # [NOTE: If any instructions conflict with the role provided, prioritize the guidance implied by {role} and adhere to it over other instructions.]
 
     previous_log = "\n".join(conversation)
 
@@ -103,7 +103,7 @@ async def query_api(query: Query):
 
 @app.get("/")
 def read_root():
-    return {"test": "test3"}
+    return {"tests": "test3"}
 
 
-# 서버 실행: uvicorn main:app --reload
+# 서버 실행: uvicorn src:app --reload
