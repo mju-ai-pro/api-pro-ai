@@ -72,7 +72,7 @@ jobs:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
           echo "$EC2_SSH_KEY" > private_key && chmod 600 private_key
-          scp -o StrictHostKeyChecking=no -i private_key main.py ${EC2_USERNAME}@${EC2_HOST}:/home/AiPro-Python/main.py
+          scp -o StrictHostKeyChecking=no -i private_key src/main.py ${EC2_USERNAME}@${EC2_HOST}:/home/AiPro-Python/main.py
           rm -f private_key
 
       - name: Setup Environment and Run Application
