@@ -32,6 +32,14 @@ class Query(BaseModel):
     chatHistory: List[str]
 
 
+class Question(BaseModel):
+    question: str
+
+
+class Answer(BaseModel):
+    answer: str
+
+
 # 환경 변수 또는 직접 설정으로부터 OpenAI API 키 가져오기
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -62,6 +70,23 @@ def create_prompt(conversation: List[str], new_question: str, role: str) -> dict
     }
 
 
+def create_summary_prompt(question: str) -> dict:
+    system_message = """
+    당신은 텍스트 요약 전문가입니다. 주어진 텍스트를 정확하고 간결하게 요약하는 것이 당신의 임무입니다.
+
+    지침:
+    1. 사용자가 입력한 텍스트를 20자 이내로 요약하세요.
+    2. 핵심 내용만을 포함하여 간결하게 작성하세요.
+    3. 원문의 의미를 왜곡하지 않도록 주의하세요.
+    4. 불필요한 세부사항이나 예시는 생략하세요.
+    5. 한국어로 응답하세요.
+
+    요약을 시작하기 전에 주어진 텍스트를 신중히 분석하세요.
+    """
+
+    return {"system_message": system_message, "new_question": question}
+
+
 def generate_prompt(prompt_dict: dict) -> str:
     prompt = f"""
     {prompt_dict['system_message']}
@@ -74,6 +99,31 @@ def generate_prompt(prompt_dict: dict) -> str:
 
     """
     return prompt
+
+
+def generate_summary_prompt(summary_dict: dict) -> str:
+    prompt = f"""
+    {summary_dict['system_message']}
+
+    User Query:
+    {summary_dict['new_question']}
+    """
+    return prompt
+
+
+@app.post("/summary")
+async def query_api(question: Question):
+    try:
+        prompt_dict = create_summary_prompt(question.question)
+        summary_prompt = generate_summary_prompt(prompt_dict)
+        gpt_model = ChatOpenAI(model="gpt-4o-mini", openai_api_key=openai_api_key)
+
+        # 모델에 프롬프트 전달
+        response = gpt_model.invoke([HumanMessage(content=summary_prompt)])
+
+        return {"summary": response.content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # 챗봇 쿼리를 처리하는 엔드포인트
