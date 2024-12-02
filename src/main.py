@@ -39,7 +39,6 @@ class Question(BaseModel):
 class Answer(BaseModel):
     answer: str
 
-
 # 환경 변수 또는 직접 설정으로부터 OpenAI API 키 가져오기
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -86,7 +85,6 @@ def create_summary_prompt(question: str) -> dict:
 
     return {"system_message": system_message, "new_question": question}
 
-
 def generate_prompt(prompt_dict: dict) -> str:
     prompt = f"""
     {prompt_dict['system_message']}
@@ -124,7 +122,6 @@ async def query_api(question: Question):
         return {"summary": response.content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 # 챗봇 쿼리를 처리하는 엔드포인트
 @app.post("/query")
